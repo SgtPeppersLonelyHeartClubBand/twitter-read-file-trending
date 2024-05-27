@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 
+      MYSQL_DATABASE: twitter_feed_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  solr:
+    image: solr:8.8.2
+    container_name: solr
+    ports:
+      - "8983:8983"
+    volumes:
+      - solr-data:/var/solr
+    command:
+      - solr-precreate
+      - twitter_feed
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: twitter_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - solr
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/twitter_feed_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 
+      SOLR_HOST: http://solr:8983/solr
+
+volumes:
+  mysql-data:
+  solr-data:
